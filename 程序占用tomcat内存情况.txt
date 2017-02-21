@@ -1,0 +1,33 @@
+一、查看当前用户线程和文件句柄数是否超出限制
+（1）显示当前用户进程限制：ulimit -a 
+（2）修改所有 linux 用户的环境变量文件：
+	vi /etc/profile  
+	ulimit -u 10000  
+	ulimit -n 4096 
+	保存后运行#source /etc/profile 使其生效 
+二、查看当前端口号进程信息和GC使用情况
+（1）显示端口的PID：lsof -i:端口
+	示例：lsof -i:7074
+（2）gc信息统计：jstat -gcutil PID
+示例：jstat -gcutil 3195
+
+（3）输出线程数：ps -mp PID -o THREAD,tid,time | wc -l
+示例：ps -mp 3195 -o THREAD,tid,time | wc -l
+43
+三、查看进程内存使用情况及定位到对应程序
+（1）内存使用情况：top -p PID
+示例：top 3195
+（2）找到该进程后，如何定位具体线程或代码呢，首先显示线程列表,并按照CPU占用高的线程排序：
+ps -mp PID -o THREAD,tid,time | sort -rn | head -10
+示例：ps -mp PID -o THREAD,tid,time | sort -rn | head -10
+
+（3）将需要的线程ID转换为16进制格式：printf "%x\n" TID
+示例：printf "%x\n" 3270
+cc6
+（4）最后打印线程的堆栈信息：jstack PID |grep cc6 -A 30
+示例：
+jstack 2633 |grep e18 -A 30
+-------------直接定位死锁线程------------------------------------------------
+-----Waiting for monitor entry或者 Wait on monitor
+jstack 2719 |grep ' waiting on condition' -A
+---------------------------------------------------
